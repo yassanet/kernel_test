@@ -1,0 +1,3 @@
+bcc-tools
+kernel-headers
+kernel-devel

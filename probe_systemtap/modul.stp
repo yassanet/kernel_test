@@ -1,0 +1,14 @@
+global s;
+
+probe module("modul").function("mydevice_open1").call {
+	printf ("%s -> %s\n", thread_indent(1), probefunc())
+
+#	printf ("current read_count: %d\n",
+#			@var("file_stat@drivers/misc/modul.c"));
+	printf ("current read_count: %d\n",
+			@var("files_stat2@drivers/misc/modul.c")->max_files);
+
+}
+probe module("modul").function("mydevice_open1").return {
+	printf ("%s <- %s\n", thread_indent(-1), probefunc())
+}

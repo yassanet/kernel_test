@@ -1,0 +1,57 @@
+## trace sample
+global page_allocs
+
+probe kernel.trace("mm_page_alloc") {
+      page_allocs[execname()]++
+}
+
+function print_count() {
+      printf ("%-25s %-s\n", "#Pages Allocated", "Process Name")
+      foreach (proc in page_allocs-)
+              printf("%-25d %s\n", page_allocs[proc], proc)
+      printf ("\n")
+      delete page_allocs
+}
+
+probe timer.s(5) {
+        print_count()
+
+        printf ("current files_stat max_files: %d\n",
+                  @var("files_stat@fs/file_table.c")->max_files);
+}
+
+
+### get global variables
+## 
+#tap -e 'probe kernel.function("vfs_read") {
+#           printf ("current files_stat max_files: %d\n",
+#                   @var("files_stat@fs/file_table.c")->max_files);
+#           exit(); }'
+## return : current files_stat max_files: 9223372036854775807
+#$ stap -e 'probe kernel.function("vfs_read") {
+#           printf ("current files_stat max_files: %ld\n",
+#                   @var("sysctl_icmp_msgs_per_sec@net/ipv4/icmp.c"));
+#           exit(); }'
+## return : current files_stat max_files: 1000
+#$ stap -e 'probe kernel.function("vfs_read") {
+#           printf ("current files_stat max_files: %ld\n",
+#                   @var("sysctl_icmp_msgs_burst@net/ipv4/icmp.c"));
+#           exit(); }'
+## return : current files_stat max_files: 50
+#
+#
+#
+#
+## VFSのfile_operationイベントのブローブポイント一覧
+#stap -L vfs.*
+## カーネル関数のブローブポイント一覧
+#stap -L 'kernel.function("*")'
+##静的ブローブポイント一覧
+#stap -L 'kernel.trace("*")'
+##モジュール内の関数のプローブポイント一覧
+#stap -L 'module("*").function("*")'
+#
+#
+#$ stap  -v -e 'probe module("iptable_filter").function("iptable_filter_hook") { pri
+#ntf ("%s\n", @var("packet_filter@net/ipv4/netfilter/iptable_filter.c")$$); printf (
+#"%s -> %s\n", thread_indent(1), probefunc()); exit()}'
